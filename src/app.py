@@ -2,8 +2,6 @@ import json
 from youtube_transcript_api import YouTubeTranscriptApi
 
 def lambda_handler(event, context):
-	print(event)
-
 	query = event['queryStringParameters']['query']
 	vid_id = event['queryStringParameters']['vid_id']
 
@@ -16,12 +14,12 @@ def lambda_handler(event, context):
 		transcript_data = YouTubeTranscriptApi.get_transcript(vid_id)
 
 		for caption in transcript_data:
-			if query in caption['text']:
+			if 'text' in caption and 'start' in caption and query in caption['text']:
 				timestamps.append(caption['start'])
 	except:
-		print(err)
+		print("An error occured during lambda execution")
 
-	result = {
+	response = {
 		'statusCode': 200,
 		'headers': { 
 			'Access-Control-Allow-Origin': '*'
@@ -29,6 +27,5 @@ def lambda_handler(event, context):
 		'body': json.dumps(timestamps)
 	}
 
-	print(result)
-
-	return result
+	print(response)
+	return response
