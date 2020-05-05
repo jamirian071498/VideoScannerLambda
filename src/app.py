@@ -2,30 +2,48 @@ import json
 from youtube_transcript_api import YouTubeTranscriptApi
 
 def lambda_handler(event, context):
-	query = event['queryStringParameters']['query']
-	vid_id = event['queryStringParameters']['vid_id']
+    print(event)
 
-	print('query: {}'.format(query))
-	print('vid_id: {}'.format(vid_id))
+    query_lower = event['queryStringParameters']['query'].lower()
+    query_upper = ''
 
-	timestamps = []
+    if len(query_lower) == 1:
+        query_upper = query_lower.upper()
+    else:
+        query_upper = query_lower[0].upper() + query_lower[1:]
 
-	try:
-		transcript_data = YouTubeTranscriptApi.get_transcript(vid_id)
+    vid_id = event['queryStringParameters']['vid_id']
 
-		for caption in transcript_data:
-			if 'text' in caption and 'start' in caption and query in caption['text']:
-				timestamps.append(caption['start'])
-	except:
-		print("An error occured during lambda execution")
+    print('query: {}'.format(query_lower))
+    print('vid_id: {}'.format(vid_id))
 
-	response = {
-		'statusCode': 200,
-		'headers': { 
-			'Access-Control-Allow-Origin': '*'
-		},
-		'body': json.dumps(timestamps)
-	}
+    timestamps = []
 
-	print(response)
-	return response
+    try:
+        transcript_data = YouTubeTranscriptApi.get_transcript(vid_id)
+        
+        for caption in transcript_data:
+            if 'text' in caption and 'start' in caption and (query_lower in caption['text'] or query_upper in caption['text']):
+                timestamps.append(caption['start'])
+    except:
+        response = {
+            'statusCode': 200,
+            'headers': { 
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({"no_captions": "true"})
+        }
+
+        print(response)
+        return response
+
+    response = {
+        'statusCode': 200,
+        'headers': { 
+            'Access-Control-Allow-Origin': '*'
+        },
+        'body': json.dumps(timestamps)
+    }
+
+    print(response)
+    return response
