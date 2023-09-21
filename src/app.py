@@ -2,10 +2,18 @@ import json
 from youtube_transcript_api import YouTubeTranscriptApi
 
 def lambda_handler(event, context):
-    if event['path'] == 'ping':
+    if 'path' in event and event['path'] == 'ping':
         response = {
             'statusCode': 200
         }
+        return response
+
+    if 'query' not in event['queryStringParameters'] or 'vid_id' not in event['queryStringParameters']:
+        response = {
+            'statusCode': 200,
+            'body': 'Query params not specified'
+        }
+        print(response)
         return response
     
     query_lower = event['queryStringParameters']['query'].lower()
@@ -17,9 +25,6 @@ def lambda_handler(event, context):
         query_upper = query_lower[0].upper() + query_lower[1:]
 
     vid_id = event['queryStringParameters']['vid_id']
-
-    print('query: {}'.format(query_lower))
-    print('vid_id: {}'.format(vid_id))
 
     timestamps = []
 
